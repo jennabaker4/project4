@@ -3,12 +3,14 @@ import java.util.Random;
 /**
  * The world for this project. We have a Skip List and a Bintree
  *
- * @author {Your Name Here}
- * @version {Put Something Here}
+ * @author Cailin Flatla and Jenna Baker
+ * @version Fall 2025 Project 4
  */
 public class WorldDB implements ATC {
     private final int worldSize = 1024;
     private Random rnd;
+    
+    
 
     /**
      * Create a brave new World.
@@ -38,6 +40,7 @@ public class WorldDB implements ATC {
      * @return True iff the AirObject is successfully entered into the database
      */
     public boolean add(AirObject a) {
+    	return false;
     }
 
 
@@ -50,6 +53,7 @@ public class WorldDB implements ATC {
      * @return A string representing the AirObject, or null if no such name.
      */
     public String delete(String name) {
+    	return "";
     }
 
 
@@ -60,6 +64,7 @@ public class WorldDB implements ATC {
      * @return String listing the AirObjects in the Skiplist as specified.
      */
     public String printskiplist() {
+    	return "";
     }
 
 
@@ -70,6 +75,7 @@ public class WorldDB implements ATC {
      * @return String listing the Bintree nodes as specified.
      */
     public String printbintree() {
+    	return "";
     }
 
 
@@ -82,6 +88,7 @@ public class WorldDB implements ATC {
      *         Return null if there is no such name
      */
     public String print(String name) {
+    	return "";
     }
 
 
@@ -96,6 +103,7 @@ public class WorldDB implements ATC {
      *         Null if the parameters are bad
      */
     public String rangeprint(String start, String end) {
+    	return "";
     }
 
 
@@ -109,6 +117,7 @@ public class WorldDB implements ATC {
      * @return String listing the AirObjects that participate in collisions.
      */
     public String collisions() {
+    	return "";
     }
 
 
@@ -129,5 +138,6 @@ public class WorldDB implements ATC {
      *         Return null if any input parameters are bad
      */
     public String intersect(int x, int y, int z, int xwid, int ywid, int zwid) {
+    	return "";
     }
 }

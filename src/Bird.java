@@ -2,7 +2,7 @@
  * Bird class
  */
 public class Bird extends AirObject {
-	private int type;
+	private String type;
 	private int number;
 	
 	/**
@@ -17,7 +17,7 @@ public class Bird extends AirObject {
 	 * @param type of bird
 	 * @param number for identification
 	 */
-	Bird(int x, int y, int z, int xWidth, int yWidth, int zWidth, String name, int type, int number) {
+	Bird(String name, int x, int y, int z, int xWidth, int yWidth, int zWidth, String type, int number) {
 		super(x, y, z, xWidth, yWidth, zWidth, name);
 		this.type = type;
 		this.number = number;
@@ -27,7 +27,7 @@ public class Bird extends AirObject {
 	 * Return bird type
 	 * @return type
 	 */
-	public int getType() {
+	public String getType() {
 		return type;
 	}
 	

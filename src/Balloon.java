@@ -2,7 +2,7 @@
  * Balloon class
  */
 public class Balloon extends AirObject {
-	private int type;
+	private String type;
 	private int ascentRate;
 	
 	/**
@@ -17,7 +17,7 @@ public class Balloon extends AirObject {
 	 * @param type identifier number
 	 * @param ascentRate rate of ascent
 	 */
-	Balloon(int x, int y, int z, int xWidth, int yWidth, int zWidth, String name, int type, int ascentRate) {
+	Balloon(String name, int x, int y, int z, int xWidth, int yWidth, int zWidth, String type, int ascentRate) {
 		super(x, y, z, xWidth, yWidth, zWidth, name);
 		this.type = type;
 		this.ascentRate = ascentRate;
@@ -27,7 +27,7 @@ public class Balloon extends AirObject {
 	 * Return type number
 	 * @return type
 	 */
-	public int getType() {
+	public String getType() {
 		return type;
 	}
 	

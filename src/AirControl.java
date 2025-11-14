@@ -1,5 +1,9 @@
 /**
- * {Project Description Here}
+ * For this project, you will implement a small piece in an 
+ * Air Traffic Control (ATC) system.
+ * Tracking the locations of many objects and determining 
+ * if any of the objects are at risk of colliding
+ * is a critical part of any such system.
  */
 
 import java.io.IOException;
@@ -9,8 +13,8 @@ import java.io.IOException;
  * Aside from adding a description, your name(s), and the version,
  * you probably don't need to edit this file.
  *
- * @author {Your Name Here}
- * @version {Put Something Here}
+ * @author Jenna Baker and Cailin Flatla
+ * @version Fall 2025 Project 4
  */
 
 //On my honor:

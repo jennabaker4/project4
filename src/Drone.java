@@ -2,7 +2,7 @@
  * Drone class
  */
 public class Drone extends AirObject {
-	private int brand;
+	private String brand;
 	private int numEngines;
 	
 	/**
@@ -17,7 +17,7 @@ public class Drone extends AirObject {
 	 * @param brand of drone
 	 * @param numEngines in drone
 	 */
-	Drone(int x, int y, int z, int xWidth, int yWidth, int zWidth, String name, int brand, int numEngines) {
+	Drone(String name, int x, int y, int z, int xWidth, int yWidth, int zWidth, String brand, int numEngines) {
 		super(x, y, z, xWidth, yWidth, zWidth, name);
 		this.brand = brand;
 		this.numEngines = numEngines;
@@ -27,7 +27,7 @@ public class Drone extends AirObject {
 	 * Return brand
 	 * @return brand
 	 */
-	public int getBrand() {
+	public String getBrand() {
 		return brand;
 	}
 	

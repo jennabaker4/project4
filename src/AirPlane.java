@@ -2,7 +2,7 @@
  * AirPlane class
  */
 public class AirPlane extends AirObject {
-	private int carrier;
+	private String carrier;
 	private int flightNum;
 	private int numEngines;
 	
@@ -19,7 +19,7 @@ public class AirPlane extends AirObject {
 	 * @param flightNum identifier
 	 * @param numEngines number of engines on plane
 	 */
-	AirPlane(int x, int y, int z, int xWidth, int yWidth, int zWidth, String name, int carrier, int flightNum, int numEngines) {
+	AirPlane(String name, int x, int y, int z, int xWidth, int yWidth, int zWidth, String carrier, int flightNum, int numEngines) {
 		super(x, y, z, xWidth, yWidth, zWidth, name);
 		this.carrier = carrier;
 		this.flightNum = flightNum;
@@ -30,7 +30,7 @@ public class AirPlane extends AirObject {
 	 * Return carrier number
 	 * @return carrier
 	 */
-	public int getCarrier() {
+	public String getCarrier() {
 		return carrier;
 	}
 	

@@ -3,7 +3,7 @@
  */
 public class Rocket extends AirObject {
 	private int ascentRate;
-	private float trajectory;
+	private double trajectory;
 	
 	/**
 	 * Constructor
@@ -17,7 +17,7 @@ public class Rocket extends AirObject {
 	 * @param ascentRate of rocket
 	 * @param trajectory of rocket
 	 */
-	Rocket(int x, int y, int z, int xWidth, int yWidth, int zWidth, String name, int ascentRate, float trajectory) {
+	Rocket(String name, int x, int y, int z, int xWidth, int yWidth, int zWidth, int ascentRate, double trajectory) {
 		super(x, y, z, xWidth, yWidth, zWidth, name);
 		this.ascentRate = ascentRate;
 		this.trajectory = trajectory;
@@ -35,7 +35,7 @@ public class Rocket extends AirObject {
 	 * Return trajectory
 	 * @return trajectory
 	 */
-	public float getTrajectory() {
+	public double getTrajectory() {
 		return trajectory;
 	}
 }
