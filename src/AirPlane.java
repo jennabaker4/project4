@@ -49,4 +49,18 @@ public class AirPlane extends AirObject {
 	public int numEngines() {
 		return numEngines;
 	}
+	
+    /**
+     * Return a string representation of the AirPlane.
+     * Format: "Airplane name x y z xWidth yWidth zWidth carrier flightNum numEngines"
+     * @return formatted string
+     */
+    @Override
+    public String toString() {
+        return "Airplane " + getName() + " "
+            + getXorig() + " " + getYorig() + " " + getZorig() + " "
+            + getXwidth() + " " + getYwidth() + " " + getZwidth() + " "
+            + carrier + " " + flightNum + " " + numEngines;
+    }
+
 }

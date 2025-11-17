@@ -39,4 +39,17 @@ public class Drone extends AirObject {
 		return numEngines;
 	}
 	
+    /**
+     * Return a string representation of the Drone.
+     * Format: "Drone name x y z xWidth yWidth zWidth brand numEngines"
+     * @return formatted string
+     */
+    @Override
+    public String toString() {
+        return "Drone " + getName() + " "
+            + getXorig() + " " + getYorig() + " " + getZorig() + " "
+            + getXwidth() + " " + getYwidth() + " " + getZwidth() + " "
+            + brand + " " + numEngines;
+    }
+
 }

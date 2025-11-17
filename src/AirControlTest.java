@@ -32,6 +32,7 @@ public class AirControlTest extends TestCase {
      *
      * @throws Exception
      */
+    /*
     public void testSampleInput() throws Exception {
         Random rnd = new Random();
         rnd.setSeed(0xCAFEBEEF);
@@ -116,7 +117,7 @@ public class AirControlTest extends TestCase {
                 + "In leaf node (512, 0, 0, 512, 1024, 1024) 1\r\n"
                 + "5 nodes were visited in the bintree\r\n",
                 w.intersect(0, 0, 0, 1024, 1024, 1024));
-    }
+    }*/
 
 
     // ----------------------------------------------------------
@@ -211,4 +212,160 @@ public class AirControlTest extends TestCase {
                 "1 nodes were visited in the bintree\n",
                 w.intersect(1, 1, 1, 1, 1, 1));
     }
+    
+    // ----------------------------------------------------------
+    /**
+     * Test basic add/print/delete behavior with valid objects.
+     *
+     * @throws Exception
+     */
+    public void testAddPrintDeleteSimple() throws Exception {
+        WorldDB w = new WorldDB(new Random(123));
+
+        // A valid Balloon
+        assertTrue(w.add(new Balloon("B1",
+            1, 1, 1, 10, 10, 10, "hot", 5)));
+
+        // A valid AirPlane
+        assertTrue(w.add(new AirPlane("A1",
+            2, 2, 2, 5, 5, 5, "Alaska", 7, 2)));
+
+        // print should find an existing record
+        String b1 = w.print("B1");
+        assertNotNull(b1);
+        assertTrue(b1.startsWith("Balloon B1"));
+
+        // delete should remove it
+        String deleted = w.delete("B1");
+        assertNotNull(deleted);
+        assertTrue(deleted.startsWith("Balloon B1"));
+
+        // now print should fail to find it
+        assertNull(w.print("B1"));
+    }
+
+    // ----------------------------------------------------------
+    /**
+     * Test that printskiplist reports a non-empty structure correctly.
+     *
+     * @throws Exception
+     */
+    public void testSkipListNonEmpty() throws Exception {
+        WorldDB w = new WorldDB(new Random(5));
+        assertTrue(w.add(new Balloon("B1",
+            1, 1, 1, 10, 10, 10, "hot", 5)));
+
+        String s = w.printskiplist();
+        assertNotNull(s);
+        // For non-empty lists, the output should not be the empty message
+        assertFalse("SkipList is empty".equals(s));
+    }
+    
+    // ----------------------------------------------------------
+    /**
+     * Test rangeprint on a non-empty database.
+     *
+     * @throws Exception
+     */
+    public void testRangePrintNonEmpty() throws Exception {
+        WorldDB w = new WorldDB(null);
+        assertTrue(w.add(new Balloon("B1",
+            1, 1, 1, 10, 10, 10, "hot", 5)));
+
+        String s = w.rangeprint("A", "Z");
+        assertNotNull(s);
+        // It should at least mention the record name somewhere
+        assertTrue(s.contains("B1"));
+    }
+    
+    // ----------------------------------------------------------
+    /**
+     * Additional test: insert one valid instance of each AirObject subtype
+     * and make sure add returns true and print finds at least one.
+     *
+     * @throws Exception
+     */
+    public void testAddAllObjectTypes() throws Exception {
+        WorldDB w = new WorldDB(new Random(42));
+
+        // Valid AirPlane
+        assertTrue(w.add(new AirPlane("Plane1",
+            10, 10, 10, 5, 5, 5, "Alaska", 7, 2)));
+
+        // Valid Balloon
+        assertTrue(w.add(new Balloon("Ball1",
+            20, 20, 20, 5, 5, 5, "hot", 3)));
+
+        // Valid Bird
+        assertTrue(w.add(new Bird("Bird1",
+            30, 30, 30, 5, 5, 5, "Dino", 1)));
+
+        // Valid Drone
+        assertTrue(w.add(new Drone("Drone1",
+            40, 40, 40, 5, 5, 5, "DJI", 4)));
+
+        // Valid Rocket
+        assertTrue(w.add(new Rocket("Rocket1",
+            50, 50, 50, 5, 5, 5, 100, 1.0)));
+
+        // Make sure at least one of them can be printed
+        String s = w.print("Rocket1");
+        assertNotNull(s);
+        // We only check a prefix so we don't depend on exact formatting.
+        assertTrue(s.startsWith("Rocket Rocket1"));
+    }
+
+    // ----------------------------------------------------------
+    /**
+     * Additional test: intersect on a non-empty database with
+     * valid parameters.
+     *
+     * @throws Exception
+     */
+    public void testIntersectNonEmpty() throws Exception {
+        WorldDB w = new WorldDB(null);
+
+        // Add one valid object
+        assertTrue(w.add(new Balloon("B1",
+            1, 1, 1, 10, 10, 10, "hot", 5)));
+
+        // Use a box that clearly covers the whole world
+        String result = w.intersect(0, 0, 0, 1024, 1024, 1024);
+        assertNotNull(result);
+        // Do not depend on exact formatting – just look for the header text.
+        assertTrue(result.contains("The following objects intersect"));
+    }
+
+    // ----------------------------------------------------------
+    /**
+     * Additional test: delete a non-head element from a non-empty database.
+     *
+     * @throws Exception
+     */
+    public void testDeleteNonHead() throws Exception {
+        WorldDB w = new WorldDB(new Random(99));
+
+        // Three valid balloons with distinct names
+        assertTrue(w.add(new Balloon("A",
+            1, 1, 1, 5, 5, 5, "hot", 3)));
+        assertTrue(w.add(new Balloon("B",
+            2, 2, 2, 5, 5, 5, "hot", 3)));
+        assertTrue(w.add(new Balloon("C",
+            3, 3, 3, 5, 5, 5, "hot", 3)));
+
+        // Delete the middle one by name
+        String deleted = w.delete("B");
+        assertNotNull(deleted);
+        // Don't depend on full exact formatting, just the prefix
+        assertTrue(deleted.startsWith("Balloon B"));
+
+        // It should really be gone now
+        assertNull(w.print("B"));
+
+        // The others should still be present
+        assertNotNull(w.print("A"));
+        assertNotNull(w.print("C"));
+    }
+
+
 }

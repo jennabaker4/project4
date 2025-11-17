@@ -38,4 +38,18 @@ public class Bird extends AirObject {
 	public int getNumber() {
 		return number;
 	}
+	
+    /**
+     * Return a string representation of the Bird.
+     * Format: "Bird name x y z xWidth yWidth zWidth type number"
+     * @return formatted string
+     */
+    @Override
+    public String toString() {
+        return "Bird " + getName() + " "
+            + getXorig() + " " + getYorig() + " " + getZorig() + " "
+            + getXwidth() + " " + getYwidth() + " " + getZwidth() + " "
+            + type + " " + number;
+    }
+
 }
