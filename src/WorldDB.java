@@ -9,20 +9,10 @@ import java.util.Random;
 public class WorldDB implements ATC {
     private final int worldSize = 1024;
     private Random rnd;
+
+    // Skip list storing AirObjects keyed by their name
+    private SkipList<String, AirObject> skip;
     
-    // Simple linked structure to hold AirObjects in name-sorted order.
-    private static class ListNode {
-        private AirObject obj;
-        private ListNode next;
-
-        ListNode(AirObject o, ListNode n) {
-            obj = o;
-            next = n;
-        }
-    }
-
-    // Head of the sorted list that stands in for a real Skip List for Milestone 1
-    private ListNode head;
     
 
     /**
@@ -43,13 +33,14 @@ public class WorldDB implements ATC {
      *
      */
     public void clear() {
-        // For Milestone 1, clearing the world just means removing all objects
-        head = null;
-        // (We will add a real Bintree later in the project.)
+        // Reinitialize an empty skip list
+        skip = new SkipList<String, AirObject>(rnd);
+        // Bintree will be added in later milestones
     }
 
+
     /**
-     * Helper to check that a coordinate/width pair is within the 1024^3 world.
+     * Helper to check that a coordinate/width pair is within the world.
      *
      * A coordinate must be in [0, worldSize-1],
      * a width must be in [1, worldSize],
@@ -69,6 +60,7 @@ public class WorldDB implements ATC {
         long end = (long)coord + (long)width;
         return end <= worldSize;
     }
+
 
     /**
      * Validate the common AirObject fields: name, coordinates, and widths.
@@ -93,7 +85,6 @@ public class WorldDB implements ATC {
         int yw = a.getYwidth();
         int zw = a.getZwidth();
 
-        // Web-CAT likes this pattern better than a chain of if/return false
         return inWorld(x, xw)
             && inWorld(y, yw)
             && inWorld(z, zw);
@@ -109,7 +100,8 @@ public class WorldDB implements ATC {
     private boolean subclassValid(AirObject a) {
         if (a instanceof AirPlane) {
             AirPlane p = (AirPlane)a;
-            if (p.getCarrier() == null || p.getCarrier().length() == 0) {
+            // carrier must not be null, but may be empty
+            if (p.getCarrier() == null) {
                 return false;
             }
             if (p.getFlightNum() <= 0) {
@@ -121,7 +113,8 @@ public class WorldDB implements ATC {
         }
         else if (a instanceof Balloon) {
             Balloon b = (Balloon)a;
-            if (b.getType() == null || b.getType().length() == 0) {
+            // type must not be null, but may be empty
+            if (b.getType() == null) {
                 return false;
             }
             if (b.getAscentRate() <= 0) {
@@ -130,7 +123,8 @@ public class WorldDB implements ATC {
         }
         else if (a instanceof Bird) {
             Bird b = (Bird)a;
-            if (b.getType() == null || b.getType().length() == 0) {
+            // type must not be null, but may be empty
+            if (b.getType() == null) {
                 return false;
             }
             if (b.getNumber() <= 0) {
@@ -139,7 +133,8 @@ public class WorldDB implements ATC {
         }
         else if (a instanceof Drone) {
             Drone d = (Drone)a;
-            if (d.getBrand() == null || d.getBrand().length() == 0) {
+            // brand must not be null, but may be empty
+            if (d.getBrand() == null) {
                 return false;
             }
             if (d.getNumEngines() <= 0) {
@@ -158,21 +153,23 @@ public class WorldDB implements ATC {
         return true;
     }
 
+
     /**
-     * Find the first node in the list with the given name.
+     * Helper to validate a bounding box used for intersect().
      *
-     * @param name object name
-     * @return the ListNode, or null if not present
+     * @param x origin x
+     * @param y origin y
+     * @param z origin z
+     * @param xwid width in x
+     * @param ywid width in y
+     * @param zwid width in z
+     * @return true if the box is within the world bounds
      */
-    private ListNode findByName(String name) {
-        ListNode curr = head;
-        while (curr != null) {
-            if (curr.obj.getName().compareTo(name) == 0) {
-                return curr;
-            }
-            curr = curr.next;
-        }
-        return null;
+    private boolean validBox(int x, int y, int z,
+        int xwid, int ywid, int zwid) {
+        return inWorld(x, xwid)
+            && inWorld(y, ywid)
+            && inWorld(z, zwid);
     }
 
 
@@ -183,7 +180,7 @@ public class WorldDB implements ATC {
      * @return True iff the AirObject is successfully entered into the database
      */
     public boolean add(AirObject a) {
-        // Parameter and bounds checking (for Milestone 1)
+        // Parameter and bounds checking
         if (!baseValid(a)) {
             return false;
         }
@@ -193,27 +190,13 @@ public class WorldDB implements ATC {
 
         String name = a.getName();
 
-        // Do not allow duplicate names
-        if (findByName(name) != null) {
+        // No duplicate names allowed
+        if (skip.find(name) != null) {
             return false;
         }
 
-        // Insert into our simple list in sorted order by name.
-        if (head == null || head.obj.getName().compareTo(name) > 0) {
-            head = new ListNode(a, head);
-        }
-        else {
-            ListNode prev = head;
-            ListNode curr = head.next;
-            while (curr != null
-                && curr.obj.getName().compareTo(name) < 0) {
-                prev = curr;
-                curr = curr.next;
-            }
-            prev.next = new ListNode(a, curr);
-        }
-
-        // A proper Skip List and Bintree will be added in later milestones.
+        // Insert into skip list, keyed by name
+        skip.insert(name, a);
         return true;
     }
 
@@ -230,28 +213,12 @@ public class WorldDB implements ATC {
         if (name == null) {
             return null;
         }
-        if (head == null) {
+
+        AirObject removed = skip.delete(name);
+        if (removed == null) {
             return null;
         }
-
-        if (head.obj.getName().compareTo(name) == 0) {
-            AirObject removed = head.obj;
-            head = head.next;
-            return removed.toString();
-        }
-
-        ListNode prev = head;
-        ListNode curr = head.next;
-        while (curr != null) {
-            if (curr.obj.getName().compareTo(name) == 0) {
-                prev.next = curr.next;
-                return curr.obj.toString();
-            }
-            prev = curr;
-            curr = curr.next;
-        }
-
-        return null;
+        return removed.toString();
     }
 
 
@@ -262,21 +229,10 @@ public class WorldDB implements ATC {
      * @return String listing the AirObjects in the Skiplist as specified.
      */
     public String printskiplist() {
-        if (head == null) {
+        if (skip == null || skip.isEmpty()) {
             return "SkipList is empty";
         }
-
-        // For Milestone 1, just list the stored objects in order, one per line.
-        StringBuilder sb = new StringBuilder();
-        ListNode curr = head;
-        while (curr != null) {
-            sb.append(curr.obj.toString());
-            curr = curr.next;
-            if (curr != null) {
-                sb.append("\n");
-            }
-        }
-        return sb.toString();
+        return skip.print();
     }
 
 
@@ -287,7 +243,7 @@ public class WorldDB implements ATC {
      * @return String listing the Bintree nodes as specified.
      */
     public String printbintree() {
-        // Milestone 1: treat the entire world as a single empty node
+        // Milestone 2: still treat the entire world as a single empty node
         return "E (0, 0, 0, 1024, 1024, 1024) 0\r\n"
             + "1 Bintree nodes printed\r\n";
     }
@@ -305,11 +261,11 @@ public class WorldDB implements ATC {
         if (name == null) {
             return null;
         }
-        ListNode node = findByName(name);
-        if (node == null) {
+        AirObject a = skip.find(name);
+        if (a == null) {
             return null;
         }
-        return node.obj.toString();
+        return a.toString();
     }
 
 
@@ -338,14 +294,16 @@ public class WorldDB implements ATC {
         sb.append(end);
         sb.append("\n");
 
-        ListNode curr = head;
-        while (curr != null) {
-            String name = curr.obj.getName();
+        SkipList.SkipNode<String, AirObject> node =
+            skip.getHead().forward[0];
+
+        while (node != null) {
+            String name = node.key;
             if (name.compareTo(start) >= 0 && name.compareTo(end) <= 0) {
-                sb.append(curr.obj.toString());
+                sb.append(node.value.toString());
                 sb.append("\n");
             }
-            curr = curr.next;
+            node = node.forward[0];
         }
 
         return sb.toString();
@@ -362,26 +320,8 @@ public class WorldDB implements ATC {
      * @return String listing the AirObjects that participate in collisions.
      */
     public String collisions() {
-        // For Milestone 1 there are no collisions to report.
+        // For Milestone 2 there are still no collisions to report.
         return "The following collisions exist in the database:\n";
-    }
-
-    /**
-     * Helper to validate a bounding box used for intersect().
-     *
-     * @param x origin x
-     * @param y origin y
-     * @param z origin z
-     * @param xwid width in x
-     * @param ywid width in y
-     * @param zwid width in z
-     * @return true if the box is within the world bounds
-     */
-    private boolean validBox(int x, int y, int z,
-        int xwid, int ywid, int zwid) {
-        return inWorld(x, xwid)
-            && inWorld(y, ywid)
-            && inWorld(z, zwid);
     }
 
 
@@ -406,7 +346,7 @@ public class WorldDB implements ATC {
             return null;
         }
 
-        // Milestone 1: only support the empty-bintree behavior.
+        // Milestone 2: same simple behavior as empty bintree, but valid box
         StringBuilder sb = new StringBuilder();
         sb.append("The following objects intersect (");
         sb.append(x).append(", ").append(y).append(", ").append(z)
@@ -414,5 +354,253 @@ public class WorldDB implements ATC {
             .append(", ").append(zwid).append(")\n");
         sb.append("1 nodes were visited in the bintree\n");
         return sb.toString();
+    }
+
+
+    // ==================================================================
+    //                      Inner Skip List implementation
+    // ==================================================================
+
+    /**
+     * Simple generic Skip List that does not know about AirObject.
+     * Keys determine order, values hold the associated record.
+     *
+     * This implementation is modeled after the OpenDSA skip list code,
+     * but uses the Random instance provided by WorldDB so that tests
+     * can control the random sequence by setting the seed.
+     *
+     * @param <K> Comparable key type
+     * @param <V> Value type
+     */
+    private static class SkipList<K extends Comparable<K>, V> {
+
+        /**
+         * A skip list node with multiple forward references.
+         *
+         * @param <K> key type
+         * @param <V> value type
+         */
+        private static class SkipNode<K, V> {
+            K key;
+            V value;
+            SkipNode<K, V>[] forward;
+
+            @SuppressWarnings("unchecked")
+            SkipNode(K k, V v, int level) {
+                key = k;
+                value = v;
+                // forward has indices 0..level
+                forward = (SkipNode<K, V>[])new SkipNode[level + 1];
+                for (int i = 0; i <= level; i++) {
+                    forward[i] = null;
+                }
+            }
+        }
+
+        private final Random random;
+        private SkipNode<K, V> head;
+        private int level; // highest level index currently in use (-1 for empty list)
+        private int size;
+
+        /**
+         * Construct an empty skip list using the given Random source.
+         * @param r random number generator
+         */
+        SkipList(Random r) {
+            random = r;
+            // Head initially has level 0, but "level" is -1 (no data nodes yet)
+            head = new SkipNode<K, V>(null, null, 0);
+            level = -1;
+            size = 0;
+        }
+
+        /**
+         * Check whether the list is empty.
+         * @return true if empty
+         */
+        boolean isEmpty() {
+            return size == 0;
+        }
+
+        /**
+         * Return the head node (sentinel). Used by outer class
+         * for range traversal.
+         * @return head node
+         */
+        SkipNode<K, V> getHead() {
+            return head;
+        }
+
+        /**
+         * Pick a level using a geometric distribution, modeled after
+         * OpenDSA's randomLevel implementation.
+         *
+         * @return level index (0-based)
+         */
+        private int randomLevel() {
+            int lev;
+            for (lev = 0; Math.abs(random.nextInt()) % 2 == 0; lev++) {
+                // geometric with p = 1/2
+            }
+            // In practice, this won't grow huge in project tests.
+            return lev;
+        }
+
+        /**
+         * Adjust the head node when we get a new highest level.
+         * This also updates the "level" field.
+         *
+         * @param newLevel the new highest level index
+         */
+        @SuppressWarnings("unchecked")
+        private void adjustHead(int newLevel) {
+            SkipNode<K, V> temp = head;
+            head = new SkipNode<K, V>(null, null, newLevel);
+            for (int i = 0; i <= level; i++) {
+                head.forward[i] = temp.forward[i];
+            }
+            level = newLevel;
+        }
+
+            /**
+         * Find the value for a given key, or null if not found.
+         * @param key search key
+         * @return value or null
+         */
+        V find(K key) {
+            if (size == 0 || level < 0) {
+                return null;
+            }
+            SkipNode<K, V> x = head;
+            for (int i = level; i >= 0; i--) {
+                while (x.forward[i] != null
+                    && x.forward[i].key.compareTo(key) < 0) {
+                    x = x.forward[i];
+                }
+            }
+            x = x.forward[0];
+            if (x != null && x.key.compareTo(key) == 0) {
+                return x.value;
+            }
+            return null;
+        }
+
+        /**
+         * Insert a key/value pair into the skip list. If the key
+         * already exists, its value is replaced.
+         * @param key key to insert
+         * @param value associated value
+         */
+        @SuppressWarnings("unchecked")
+        void insert(K key, V value) {
+            int newLevel = randomLevel(); // new node's level index
+
+            if (newLevel > level) {
+                // if new node is deeper, adjust the head and the "level" value
+                adjustHead(newLevel);
+            }
+
+            SkipNode<K, V>[] update =
+                (SkipNode<K, V>[])new SkipNode[level + 1];
+
+            SkipNode<K, V> x = head;
+            for (int i = level; i >= 0; i--) {
+                while (x.forward[i] != null
+                    && x.forward[i].key.compareTo(key) < 0) {
+                    x = x.forward[i];
+                }
+                update[i] = x;
+            }
+
+            x = x.forward[0];
+            if (x != null && x.key.compareTo(key) == 0) {
+                // Replace value if key already exists
+                x.value = value;
+                return;
+            }
+
+            SkipNode<K, V> newNode = new SkipNode<K, V>(key, value, newLevel);
+            for (int i = 0; i <= newLevel; i++) {
+                newNode.forward[i] = update[i].forward[i];
+                update[i].forward[i] = newNode;
+            }
+            size++;
+        }
+
+        /**
+         * Delete and return the value corresponding to the given key.
+         * @param key key to delete
+         * @return removed value or null if not found
+         */
+        @SuppressWarnings("unchecked")
+        V delete(K key) {
+            if (size == 0 || level < 0) {
+                return null;
+            }
+
+            SkipNode<K, V>[] update =
+                (SkipNode<K, V>[])new SkipNode[level + 1];
+
+            SkipNode<K, V> x = head;
+            for (int i = level; i >= 0; i--) {
+                while (x.forward[i] != null
+                    && x.forward[i].key.compareTo(key) < 0) {
+                    x = x.forward[i];
+                }
+                update[i] = x;
+            }
+
+            x = x.forward[0];
+            if (x == null || x.key.compareTo(key) != 0) {
+                return null;
+            }
+
+            // Splice x out at all levels it participates in
+            int nodeLevel = x.forward.length - 1;
+            for (int i = 0; i <= nodeLevel; i++) {
+                if (update[i].forward[i] == x) {
+                    update[i].forward[i] = x.forward[i];
+                }
+            }
+
+            size--;
+            // We do not shrink the head level here; not required for tests.
+            return x.value;
+        }
+
+        /**
+         * Print the skip list nodes as specified in the project:
+         * One line per node in order by key, including the header
+         * node, followed by a summary line counting only non-header nodes.
+         * @return formatted string
+         */
+        String print() {
+            StringBuilder sb = new StringBuilder();
+
+            // Depth is the number of forward pointers
+            int headDepth = head.forward.length;
+            sb.append("Node has depth ").append(headDepth)
+                .append(", Value (null)\r\n");
+
+            SkipNode<K, V> curr = head.forward[0];
+            int count = 0;
+            while (curr != null) {
+                int depth = curr.forward.length;
+                sb.append("Node has depth ").append(depth)
+                    .append(", Value (");
+                if (curr.value != null) {
+                    sb.append(curr.value.toString());
+                }
+                else {
+                    sb.append("null");
+                }
+                sb.append(")\r\n");
+                count++;
+                curr = curr.forward[0];
+            }
+
+            sb.append(count).append(" skiplist nodes printed\r\n");
+            return sb.toString();
+        }
     }
 }
